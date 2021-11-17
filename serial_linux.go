@@ -145,20 +145,32 @@ func (p *Port) Write(b []byte) (n int, err error) {
 // Discards data written to the port but not transmitted,
 // or data received but not read
 func (p *Port) Flush() error {
-	const TCFLSH = 0x540B
-	_, _, errno := unix.Syscall(
-		unix.SYS_IOCTL,
-		uintptr(p.f.Fd()),
-		uintptr(TCFLSH),
-		uintptr(unix.TCIOFLUSH),
-	)
-
-	if errno == 0 {
-		return nil
-	}
+	errno := p.ioctl(unix.TCFLSH, unix.TCIOFLUSH)
 	return errno
 }
 
 func (p *Port) Close() (err error) {
 	return p.f.Close()
+}
+
+// Ioctl sends
+func (p *Port) ioctl(command int, data int) error {
+	_, _, errno := unix.Syscall(
+		unix.SYS_IOCTL,
+		uintptr(p.f.Fd()),
+		uintptr(command),
+		uintptr(unsafe.Pointer(&data)),
+	)
+	if errno != 0 {
+		return fmt.Errorf("[Ioctl] error: %d", errno)
+	}
+	return nil
+}
+
+func (p *Port) SetDTR() error {
+	return p.ioctl(unix.TIOCMBIS, unix.TIOCM_DTR)
+}
+
+func (p *Port) ClearDTR() error {
+	return p.ioctl(unix.TIOCMBIC, unix.TIOCM_DTR)
 }
