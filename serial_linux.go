@@ -63,7 +63,7 @@ func openPort(name string, baud int, databits byte, parity Parity, stopbits Stop
 	}()
 
 	// Base settings
-	cflagToUse := unix.CREAD | unix.CLOCAL | rate | unix.CRTSCTS
+	cflagToUse := unix.CREAD | unix.CLOCAL | rate | unix.CRTSCTS | unix.IGNCR
 	switch databits {
 	case 5:
 		cflagToUse |= unix.CS5
